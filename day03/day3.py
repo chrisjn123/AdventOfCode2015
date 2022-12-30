@@ -16,7 +16,7 @@ move_map = {
 for i, move in enumerate(data[0]):
     dx = move_map[move]
     
-    if i %2 == 0:
+    if i % 2 == 0:
         pos += dx
         delivered.add(pos)
     else:
