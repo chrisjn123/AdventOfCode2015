@@ -7,6 +7,16 @@ with open('input.txt') as fh:
 vars = defaultdict(np.uint16)
 
 for line in data:
+    sp = line.split()   
+    if len(sp) != 3:
+        continue
+    else:
+        try:
+            vars[sp[-1]] = np.uint16(sp[0])
+        except ValueError:
+            vars[sp[-1]] = vars[sp[0]]
+
+for line in data:
     sp = line.split()
     if 'AND' in line:
         try:
@@ -33,9 +43,6 @@ for line in data:
     elif 'NOT' in line:
         vars[sp[-1]] = np.uint16(~vars[sp[1]])
     else:
-        try:
-            vars[sp[-1]] = np.uint16(sp[0])
-        except ValueError:
-            vars[sp[-1]] = vars[sp[0]]
+        pass
 
 print(vars['a'])
