@@ -1,5 +1,6 @@
 from collections import defaultdict
-import numpy as np
+import ctypes
+from functools import cache
 
 with open('input.txt') as fh:
     data = [line.strip() for line in fh.readlines()]
@@ -16,7 +17,7 @@ look_up = {key: val for key, val in sorted(look_up.items(), key = lambda ele: el
 
 def compute(table: dict, key: str) -> int:
     try:
-        out = np.uint16(table[key])
+        out = ctypes.c_uint16(int(table[key]))
         return out
     except:
         pass
@@ -25,19 +26,29 @@ def compute(table: dict, key: str) -> int:
     if len(op) == 1:
         return compute(table, op[0])
     elif '~' in op:
-        return eval(f'{op[0]}{compute(table, op[1])}')
+        return ctypes.c_uint16(~compute(table, op[1]).value)
     else:
         try:
-            left = np.uint16(op[0])
+            left = ctypes.c_uint16(int(op[0]))
         except:
             left = compute(table, op[0])
 
         try:
-            right = np.uint16(op[2])
+            right = ctypes.c_uint16(int(op[2]))
         except:
             right = compute(table, op[2])
 
     
-        return eval(f'{left}{op[1]}{right}')
+        match op[1]:
+            case '<<':
+                return ctypes.c_uint16(left.value << right.value)
+            case '>>':
+                return ctypes.c_uint16(left.value >> right.value)
+            case '&':
+                return ctypes.c_uint16(left.value & right.value)
+            case '|':
+                return ctypes.c_uint16(left.value | right.value)
+            case other:
+                print(f'Error: {op[1]}')
 
 print(compute(look_up, 'a'))
