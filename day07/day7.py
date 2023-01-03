@@ -13,42 +13,58 @@ for line in data:
     op = sp[0].strip()
     look_up[key] = op
 
-look_up = {key: val for key, val in sorted(look_up.items(), key = lambda ele: ele[0])}
+table = defaultdict()
+table = {key: val for key, val in sorted(look_up.items(), key = lambda ele: ele[0])}
+table['b'] = 46065
 
-def compute(table: dict, key: str) -> int:
+def compute(key: str) -> int:
+    global table
     try:
-        out = ctypes.c_uint16(int(table[key]))
+        out = ctypes.c_uint16(int(table[key].value))
+        table[key] = out
         return out
     except:
-        pass
+        try:
+            out = ctypes.c_uint16(int(table[key]))
+            table[key] = out
+            return out
+        except:
+            try:
+                out = ctypes.c_uint16(int(key))
+                table[key] = out
+                return out
+            except:
+                pass
 
     op = table[key].lower().replace('lshift', '<<').replace('rshift', '>>').replace('or', '|').replace('not', '~').replace('and', '&').split()
     if len(op) == 1:
-        return compute(table, op[0])
+        return compute(op[0])
     elif '~' in op:
-        return ctypes.c_uint16(~compute(table, op[1]).value)
+        return ctypes.c_uint16(~compute(op[1]).value)
     else:
         try:
-            left = ctypes.c_uint16(int(op[0]))
+            left = ctypes.c_uint16(int(op[0].value))
         except:
-            left = compute(table, op[0])
+            left = compute(op[0])
 
         try:
-            right = ctypes.c_uint16(int(op[2]))
+            right = ctypes.c_uint16(int(op[2].value))
         except:
-            right = compute(table, op[2])
+            right = compute(op[2])
 
     
         match op[1]:
             case '<<':
-                return ctypes.c_uint16(left.value << right.value)
+                ret = ctypes.c_uint16(left.value << right.value)
             case '>>':
-                return ctypes.c_uint16(left.value >> right.value)
+                ret = ctypes.c_uint16(left.value >> right.value)
             case '&':
-                return ctypes.c_uint16(left.value & right.value)
+                ret = ctypes.c_uint16(left.value & right.value)
             case '|':
-                return ctypes.c_uint16(left.value | right.value)
+                ret = ctypes.c_uint16(left.value | right.value)
             case other:
                 print(f'Error: {op[1]}')
+        table[key] = ret
+        return ret
 
-print(compute(look_up, 'a'))
+print(compute('a'))
