@@ -4,45 +4,40 @@ import numpy as np
 with open('input.txt') as fh:
     data = [line.strip() for line in fh.readlines()]
 
-vars = defaultdict(np.uint16)
+look_up = defaultdict(str)
 
 for line in data:
-    sp = line.split()   
-    if len(sp) != 3:
-        continue
-    else:
-        try:
-            vars[sp[-1]] = np.uint16(sp[0])
-        except ValueError:
-            vars[sp[-1]] = vars[sp[0]]
+    sp = line.split('->')
+    key = sp[-1].strip()
+    op = sp[0].strip()
+    look_up[key] = op
 
-for line in data:
-    sp = line.split()
-    if 'AND' in line:
-        try:
-            left = np.uint16(sp[0])
-        except:
-            left = vars[sp[0]]
-        right = vars[sp[2]]
-        dest = sp[-1]
+look_up = {key: val for key, val in sorted(look_up.items(), key = lambda ele: ele[0])}
 
-        vars[dest] = np.uint16(left & right)
-    elif 'OR' in line:
-        try:
-            left = np.uint16(sp[0])
-        except:
-            left = vars[sp[0]]
-        right = vars[sp[2]]
-        dest = sp[-1]
-
-        vars[dest] = np.uint16(left | right)
-    elif 'LSHIFT' in line:
-        vars[sp[-1]] = np.uint16(vars[sp[0]] << int(sp[2]))
-    elif 'RSHIFT' in line:
-        vars[sp[-1]] = np.uint16(vars[sp[0]] >> int(sp[2]))
-    elif 'NOT' in line:
-        vars[sp[-1]] = np.uint16(~vars[sp[1]])
-    else:
+def compute(table: dict, key: str) -> int:
+    try:
+        out = np.uint16(table[key])
+        return out
+    except:
         pass
 
-print(vars['a'])
+    op = table[key].lower().replace('lshift', '<<').replace('rshift', '>>').replace('or', '|').replace('not', '~').replace('and', '&').split()
+    if len(op) == 1:
+        return compute(table, op[0])
+    elif '~' in op:
+        return eval(f'{op[0]}{compute(table, op[1])}')
+    else:
+        try:
+            left = np.uint16(op[0])
+        except:
+            left = compute(table, op[0])
+
+        try:
+            right = np.uint16(op[2])
+        except:
+            right = compute(table, op[2])
+
+    
+        return eval(f'{left}{op[1]}{right}')
+
+print(compute(look_up, 'a'))
